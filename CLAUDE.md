@@ -19,6 +19,7 @@
   - 변수, 함수, 메서드: `camelCase` (예: `userName`, `getUserData()`)
   - 상수: `lowerCamelCase` (예: `maxRetryCount`)
   - 파일명: `snake_case` (예: `user_model.dart`)
+- 아이콘은 반드시 `PhosphorIcon` 패키지만 사용한다 (cupertino_icons, Material Icons 사용 금지)
 
 ## 에러 처리
 - null 안전성을 위해 `?`, `??`, `!` 연산자를 신중하게 사용한다

@@ -34,6 +34,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bloc: ^8.1.4
   bloc: ^8.1.2
+  phosphor_flutter: ^2.1.0
   flutter_dotenv: ^5.1.0
   table_calendar: ^3.1.0
   equatable: ^2.0.5
@@ -65,6 +66,7 @@ flutter:
   assets:
     - .env
     - .env_example
+    - assets/fonts/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -92,3 +94,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Light.otf
+          weight: 300
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
