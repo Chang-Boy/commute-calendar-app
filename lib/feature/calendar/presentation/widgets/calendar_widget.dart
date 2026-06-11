@@ -1,43 +1,66 @@
+import 'package:commute_calendar/core/services/holiday_service.dart';
+import 'package:commute_calendar/core/theme/theme_service.dart';
+import 'package:commute_calendar/feature/calendar/domain/entities/work_record_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:commute_calendar/core/theme/theme_service.dart';
-import 'package:commute_calendar/core/services/holiday_service.dart';
 
 class CalendarWidget extends StatefulWidget {
-  const CalendarWidget({super.key});
+  const CalendarWidget({
+    super.key,
+    required this.focusedMonth,
+    required this.selectedDate,
+    required this.records,
+    required this.onMonthChanged,
+    required this.onDateSelected,
+  });
+
+  final DateTime focusedMonth;
+  final DateTime selectedDate;
+  final Map<DateTime, WorkRecord> records;
+  final void Function(DateTime month) onMonthChanged;
+  final void Function(DateTime date) onDateSelected;
 
   @override
   State<CalendarWidget> createState() => _CalendarWidgetState();
 }
 
 class _CalendarWidgetState extends State<CalendarWidget> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
   Map<DateTime, String> _holidays = {};
 
   @override
   void initState() {
     super.initState();
-    _loadHolidays(_focusedDay.year);
+    _loadHolidays(widget.focusedMonth.year);
+  }
+
+  @override
+  void didUpdateWidget(CalendarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusedMonth.year != widget.focusedMonth.year) {
+      _loadHolidays(widget.focusedMonth.year);
+    }
   }
 
   Future<void> _loadHolidays(int year) async {
     final holidays = await HolidayService.getKoreanHolidays(year);
-    if (mounted) {
-      setState(() => _holidays = holidays);
-    }
+    if (mounted) setState(() => _holidays = holidays);
   }
 
-  void _onPageChanged(DateTime focusedDay) {
-    _focusedDay = focusedDay;
-    _loadHolidays(focusedDay.year);
-  }
+  DateTime _normalize(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    setState(() {
-      _selectedDay = selectedDay;
-      _focusedDay = focusedDay;
-    });
+  WorkRecord? _recordFor(DateTime day) =>
+      widget.records[_normalize(day)];
+
+  bool _isApiHoliday(DateTime day) =>
+      HolidayService.isHoliday(day, _holidays);
+
+  bool _isWeekendOrHoliday(DateTime day) {
+    final record = _recordFor(day);
+    return day.weekday == DateTime.saturday ||
+        day.weekday == DateTime.sunday ||
+        _isApiHoliday(day) ||
+        record?.type == WorkType.holiday;
   }
 
   @override
@@ -46,14 +69,18 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       locale: 'ko_KR',
       firstDay: DateTime(2020),
       lastDay: DateTime(2030, 12, 31),
-      focusedDay: _focusedDay,
+      focusedDay: widget.focusedMonth,
       calendarFormat: CalendarFormat.month,
       availableCalendarFormats: const {CalendarFormat.month: '월'},
-      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-      holidayPredicate: (day) => HolidayService.isHoliday(day, _holidays),
-      onDaySelected: _onDaySelected,
-      onPageChanged: _onPageChanged,
-      headerStyle: _buildHeaderStyle(),
+      availableGestures: AvailableGestures.horizontalSwipe,
+      headerVisible: false,
+      rowHeight: 68.0,
+      selectedDayPredicate: (day) =>
+          isSameDay(widget.selectedDate, day),
+      holidayPredicate: (day) => _isApiHoliday(day),
+      onDaySelected: (selected, focused) =>
+          widget.onDateSelected(selected),
+      onPageChanged: widget.onMonthChanged,
       daysOfWeekStyle: _buildDaysOfWeekStyle(),
       calendarStyle: _buildCalendarStyle(),
       calendarBuilders: _buildCalendarBuilders(),
@@ -62,68 +89,149 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   CalendarBuilders _buildCalendarBuilders() {
     return CalendarBuilders(
-      holidayBuilder: (context, day, focusedDay) {
-        final name = HolidayService.getHolidayName(day, _holidays);
-        return _buildHolidayDayCell(day, name);
-      },
+      defaultBuilder: (ctx, day, _) => _buildCell(day),
+      todayBuilder: (ctx, day, _) => _buildCell(day, isToday: true),
+      selectedBuilder: (ctx, day, _) => _buildCell(
+        day,
+        isSelected: true,
+        isToday: isSameDay(day, DateTime.now()),
+      ),
+      holidayBuilder: (ctx, day, _) => _buildCell(day),
+      outsideBuilder: (ctx, day, _) => _buildCell(day, isOutside: true),
     );
   }
 
-  Widget _buildHolidayDayCell(DateTime day, String? holidayName) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '${day.day}',
-          style: ThemeService.body2.copyWith(color: ThemeService.secondary),
-        ),
-        if (holidayName != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              holidayName,
-              style: ThemeService.body2.copyWith(
-                color: ThemeService.secondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w400,
-                height: 1.2,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              textAlign: TextAlign.center,
-            ),
+  Widget _buildCell(
+    DateTime day, {
+    bool isToday = false,
+    bool isSelected = false,
+    bool isOutside = false,
+  }) {
+    final record = _recordFor(day);
+    final isWeekendOrHol = _isWeekendOrHoliday(day);
+    final holidayName = _isApiHoliday(day) && !isOutside
+        ? HolidayService.getHolidayName(day, _holidays)
+        : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _buildDateCircle(
+            day,
+            isToday: isToday,
+            isSelected: isSelected,
+            isWeekendOrHol: isWeekendOrHol,
+            isOutside: isOutside,
           ),
-      ],
+          const SizedBox(height: 3),
+          if (!isOutside) _buildCellLabel(record, holidayName),
+        ],
+      ),
     );
   }
 
-  HeaderStyle _buildHeaderStyle() {
-    return HeaderStyle(
-      formatButtonVisible: false,
-      titleCentered: true,
-      titleTextStyle: ThemeService.heading3,
-      headerPadding: const EdgeInsets.symmetric(vertical: 12),
-      leftChevronIcon: const Icon(
-        Icons.chevron_left,
-        color: ThemeService.black900,
-        size: 20,
+  Widget _buildDateCircle(
+    DateTime day, {
+    required bool isToday,
+    required bool isSelected,
+    required bool isWeekendOrHol,
+    required bool isOutside,
+  }) {
+    Color bgColor = Colors.transparent;
+    Color textColor;
+    FontWeight fontWeight = FontWeight.w400;
+
+    if (isToday) {
+      bgColor = ThemeService.primary;
+      textColor = ThemeService.white;
+      fontWeight = FontWeight.w600;
+    } else if (isSelected) {
+      bgColor = ThemeService.black900;
+      textColor = ThemeService.white;
+      fontWeight = FontWeight.w600;
+    } else if (isOutside) {
+      textColor = ThemeService.black400;
+    } else if (isWeekendOrHol) {
+      textColor = ThemeService.secondary;
+    } else {
+      textColor = ThemeService.black900;
+    }
+
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bgColor,
       ),
-      rightChevronIcon: const Icon(
-        Icons.chevron_right,
-        color: ThemeService.black900,
-        size: 20,
+      child: Center(
+        child: Text(
+          '${day.day}',
+          style: ThemeService.body2.copyWith(
+            color: textColor,
+            fontWeight: fontWeight,
+          ),
+        ),
       ),
-      decoration: const BoxDecoration(color: ThemeService.white),
     );
+  }
+
+  Widget _buildCellLabel(WorkRecord? record, String? holidayName) {
+    if (record != null) {
+      return switch (record.type) {
+        WorkType.work => Text(
+            _formatDuration(record.workedDuration),
+            style: ThemeService.timeDisplay.copyWith(
+              color: ThemeService.primary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        WorkType.vacation => Text(
+            '연차',
+            style: ThemeService.timeDisplay.copyWith(
+              color: ThemeService.vacation,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        WorkType.holiday => Text(
+            '휴일',
+            style: ThemeService.timeDisplay.copyWith(
+              color: ThemeService.secondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+      };
+    }
+
+    if (holidayName != null) {
+      return Text(
+        holidayName,
+        style: ThemeService.timeDisplay.copyWith(
+          color: ThemeService.secondary,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        textAlign: TextAlign.center,
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}m';
   }
 
   DaysOfWeekStyle _buildDaysOfWeekStyle() {
     return DaysOfWeekStyle(
       weekdayStyle: ThemeService.caption,
-      weekendStyle: ThemeService.caption.copyWith(
-        color: ThemeService.secondary,
-      ),
+      weekendStyle:
+          ThemeService.caption.copyWith(color: ThemeService.secondary),
       decoration: const BoxDecoration(color: ThemeService.white),
     );
   }
@@ -131,35 +239,18 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   CalendarStyle _buildCalendarStyle() {
     return CalendarStyle(
       outsideDaysVisible: false,
-      // 기본 날짜
       defaultTextStyle: ThemeService.body2,
-      // 주말
-      weekendTextStyle: ThemeService.body2.copyWith(color: ThemeService.secondary),
-      // 공휴일 (평일 공휴일)
-      holidayTextStyle: ThemeService.body2.copyWith(color: ThemeService.secondary),
-      holidayDecoration: const BoxDecoration(shape: BoxShape.circle),
-      // 이전/다음 달 날짜
-      outsideTextStyle: ThemeService.body2.copyWith(color: ThemeService.black400),
-      // 오늘
-      todayDecoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: ThemeService.primary, width: 1.5),
-      ),
-      todayTextStyle: ThemeService.body2.copyWith(
-        color: ThemeService.primary,
-        fontWeight: FontWeight.w600,
-      ),
-      // 선택된 날짜
-      selectedDecoration: const BoxDecoration(
-        color: ThemeService.primary,
-        shape: BoxShape.circle,
-      ),
-      selectedTextStyle: ThemeService.body2.copyWith(color: ThemeService.white),
-      // 이벤트 마커 비활성화 (추후 사용)
-      markerDecoration: const BoxDecoration(
-        color: ThemeService.primary,
-        shape: BoxShape.circle,
-      ),
+      weekendTextStyle:
+          ThemeService.body2.copyWith(color: ThemeService.secondary),
+      holidayTextStyle:
+          ThemeService.body2.copyWith(color: ThemeService.secondary),
+      holidayDecoration: const BoxDecoration(),
+      outsideTextStyle:
+          ThemeService.body2.copyWith(color: ThemeService.black400),
+      todayDecoration: const BoxDecoration(),
+      todayTextStyle: ThemeService.body2,
+      selectedDecoration: const BoxDecoration(),
+      selectedTextStyle: ThemeService.body2,
       markersMaxCount: 0,
       tableBorder: const TableBorder(
         horizontalInside: BorderSide(color: ThemeService.black200),

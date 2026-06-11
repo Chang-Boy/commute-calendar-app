@@ -7,7 +7,8 @@ class ThemeService {
 
   static const Color primary = Color(0xFF74B9FF);    // 스카이블루 (포커스, 선택)
   static const Color secondary = Color(0xFFFF6B47);  // 살몬 (강조, 공휴일)
-  static const Color tertiary = Color(0xFFFFC547);   // 크림 (휴가)
+  static const Color tertiary = Color(0xFFFFC547);   // 크림
+  static const Color vacation = Color(0xFF74C69D);   // 세이지 그린 (연차)
 
   // ─── 무채색 ───────────────────────────────────────────────────────────────
 
