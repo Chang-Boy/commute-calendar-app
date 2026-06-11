@@ -50,6 +50,7 @@ class MockCalendarRepository implements ICalendarRepository {
         type: WorkType.work,
         startTime: const TimeOfDay(hour: 10, minute: 0),
         endTime: const TimeOfDay(hour: 19, minute: 0),
+        memo: '오전 팀 미팅',
       ),
       WorkRecord(
         id: '6',
@@ -70,6 +71,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '8',
         date: DateTime(y, m, 5),
         type: WorkType.vacation,
+        memo: '가족 행사',
       ),
       WorkRecord(
         id: '9',
@@ -81,6 +83,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '10',
         date: DateTime(y, m, 17),
         type: WorkType.holiday,
+        memo: '회사 창립기념일',
       ),
     ]);
   }

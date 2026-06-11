@@ -4,6 +4,7 @@ import 'package:commute_calendar/feature/calendar/presentation/bloc/calendar_blo
 import 'package:commute_calendar/feature/calendar/presentation/bloc/calendar_event.dart';
 import 'package:commute_calendar/feature/calendar/presentation/bloc/calendar_state.dart';
 import 'package:commute_calendar/feature/calendar/presentation/widgets/calendar_widget.dart';
+import 'package:commute_calendar/feature/calendar/presentation/widgets/day_info_widget.dart';
 import 'package:commute_calendar/feature/calendar/presentation/widgets/monthly_summary_widget.dart';
 import 'package:commute_calendar/feature/common/widgets/expandable_fab.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class _CalendarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ThemeService.black100,
+      backgroundColor: ThemeService.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -41,6 +42,8 @@ class _CalendarView extends StatelessWidget {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
+                        const MonthlySummaryWidget(),
+                        const _SectionDivider(),
                         BlocBuilder<CalendarBloc, CalendarState>(
                           builder: (context, state) {
                             if (state is! CalendarLoaded) {
@@ -67,7 +70,8 @@ class _CalendarView extends StatelessWidget {
                             );
                           },
                         ),
-                        const MonthlySummaryWidget(),
+                        const _SectionDivider(),
+                        const DayInfoWidget(),
                         const SizedBox(height: 96),
                       ],
                     ),
@@ -81,6 +85,18 @@ class _CalendarView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SectionDivider extends StatelessWidget {
+  const _SectionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 10,
+      color: ThemeService.black100,
     );
   }
 }

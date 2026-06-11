@@ -14,6 +14,7 @@ class WorkRecord extends Equatable {
     required this.type,
     this.startTime,
     this.endTime,
+    this.memo,
   });
 
   final String id;
@@ -21,6 +22,7 @@ class WorkRecord extends Equatable {
   final WorkType type;
   final TimeOfDay? startTime; // WorkType.work 에서만 사용
   final TimeOfDay? endTime;   // WorkType.work 에서만 사용
+  final String? memo;         // 선택 입력 메모
 
   Duration get workedDuration {
     return switch (type) {
@@ -44,6 +46,7 @@ class WorkRecord extends Equatable {
     WorkType? type,
     TimeOfDay? startTime,
     TimeOfDay? endTime,
+    String? memo,
   }) {
     return WorkRecord(
       id: id ?? this.id,
@@ -51,9 +54,10 @@ class WorkRecord extends Equatable {
       type: type ?? this.type,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
+      memo: memo ?? this.memo,
     );
   }
 
   @override
-  List<Object?> get props => [id, date, type, startTime, endTime];
+  List<Object?> get props => [id, date, type, startTime, endTime, memo];
 }

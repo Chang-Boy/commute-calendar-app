@@ -41,6 +41,7 @@ class WorkRecordBottomSheet extends StatefulWidget {
 class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
+  late TextEditingController _memoController;
 
   @override
   void initState() {
@@ -51,6 +52,16 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
         : null;
     _startTime = existing?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
     _endTime = existing?.endTime ?? const TimeOfDay(hour: 18, minute: 0);
+    final existingMemo = widget.existingRecord?.type == widget.workType
+        ? widget.existingRecord?.memo
+        : null;
+    _memoController = TextEditingController(text: existingMemo ?? '');
+  }
+
+  @override
+  void dispose() {
+    _memoController.dispose();
+    super.dispose();
   }
 
   Color get _accentColor => switch (widget.workType) {
@@ -82,6 +93,7 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
   void _save() {
     final id = widget.existingRecord?.id ??
         DateTime.now().millisecondsSinceEpoch.toString();
+    final memo = _memoController.text.trim();
 
     final record = WorkRecord(
       id: id,
@@ -89,6 +101,7 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
       type: widget.workType,
       startTime: widget.workType == WorkType.work ? _startTime : null,
       endTime: widget.workType == WorkType.work ? _endTime : null,
+      memo: memo.isEmpty ? null : memo,
     );
     Navigator.pop(context, record);
   }
@@ -122,6 +135,8 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
             _buildDurationPreview(),
             const SizedBox(height: 24),
           ],
+          _buildMemoField(),
+          const SizedBox(height: 16),
           _buildSaveButton(),
         ],
       ),
@@ -220,6 +235,33 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
       ),
     );
   }
+
+  Widget _buildMemoField() {
+    return TextField(
+      controller: _memoController,
+      maxLength: 100,
+      maxLines: 2,
+      style: ThemeService.body2,
+      decoration: InputDecoration(
+        hintText: _memoHint,
+        hintStyle: ThemeService.body2.copyWith(color: ThemeService.black400),
+        counterStyle: ThemeService.caption,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        filled: true,
+        fillColor: ThemeService.black100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  String get _memoHint => switch (widget.workType) {
+    WorkType.work => '오늘 한 일을 요약해주세요. (선택)',
+    WorkType.vacation => '어디로 휴가를 떠나시나요? (선택)',
+    WorkType.holiday => '어떤 휴일인가요? (선택)',
+  };
 
   Widget _buildSaveButton() {
     return GestureDetector(

@@ -74,6 +74,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       availableCalendarFormats: const {CalendarFormat.month: '월'},
       availableGestures: AvailableGestures.horizontalSwipe,
       headerVisible: false,
+      daysOfWeekHeight: 36,
       rowHeight: 68.0,
       selectedDayPredicate: (day) =>
           isSameDay(widget.selectedDate, day),
@@ -228,10 +229,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   }
 
   DaysOfWeekStyle _buildDaysOfWeekStyle() {
+    final baseStyle = ThemeService.body2.copyWith(color: ThemeService.black600);
     return DaysOfWeekStyle(
-      weekdayStyle: ThemeService.caption,
-      weekendStyle:
-          ThemeService.caption.copyWith(color: ThemeService.secondary),
+      weekdayStyle: baseStyle,
+      weekendStyle: baseStyle.copyWith(color: ThemeService.secondary),
       decoration: const BoxDecoration(color: ThemeService.white),
     );
   }
