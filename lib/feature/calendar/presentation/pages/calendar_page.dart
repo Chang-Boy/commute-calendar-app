@@ -8,7 +8,7 @@ class CalendarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ThemeService.background,
+      backgroundColor: ThemeService.black100,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -28,10 +28,10 @@ class CalendarPage extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      color: ThemeService.surface,
+      color: ThemeService.white,
       child: Text(
         '근태 관리',
-        style: ThemeService.title2,
+        style: ThemeService.heading2,
       ),
     );
   }

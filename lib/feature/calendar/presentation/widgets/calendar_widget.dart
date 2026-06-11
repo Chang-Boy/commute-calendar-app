@@ -76,14 +76,15 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       children: [
         Text(
           '${day.day}',
-          style: ThemeService.calendarDayWeekend,
+          style: ThemeService.body2.copyWith(color: ThemeService.secondary),
         ),
         if (holidayName != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Text(
               holidayName,
-              style: ThemeService.calendarDayWeekend.copyWith(
+              style: ThemeService.body2.copyWith(
+                color: ThemeService.secondary,
                 fontSize: 9,
                 fontWeight: FontWeight.w400,
                 height: 1.2,
@@ -101,29 +102,29 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return HeaderStyle(
       formatButtonVisible: false,
       titleCentered: true,
-      titleTextStyle: ThemeService.title3,
+      titleTextStyle: ThemeService.heading3,
       headerPadding: const EdgeInsets.symmetric(vertical: 12),
       leftChevronIcon: const Icon(
         Icons.chevron_left,
-        color: ThemeService.textPrimary,
+        color: ThemeService.black900,
         size: 20,
       ),
       rightChevronIcon: const Icon(
         Icons.chevron_right,
-        color: ThemeService.textPrimary,
+        color: ThemeService.black900,
         size: 20,
       ),
-      decoration: const BoxDecoration(color: ThemeService.surface),
+      decoration: const BoxDecoration(color: ThemeService.white),
     );
   }
 
   DaysOfWeekStyle _buildDaysOfWeekStyle() {
     return DaysOfWeekStyle(
-      weekdayStyle: ThemeService.body3,
-      weekendStyle: ThemeService.body3.copyWith(
-        color: ThemeService.weekendText,
+      weekdayStyle: ThemeService.caption,
+      weekendStyle: ThemeService.caption.copyWith(
+        color: ThemeService.secondary,
       ),
-      decoration: const BoxDecoration(color: ThemeService.surface),
+      decoration: const BoxDecoration(color: ThemeService.white),
     );
   }
 
@@ -131,29 +132,29 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return CalendarStyle(
       outsideDaysVisible: false,
       // 기본 날짜
-      defaultTextStyle: ThemeService.calendarDay,
+      defaultTextStyle: ThemeService.body2,
       // 주말
-      weekendTextStyle: ThemeService.calendarDayWeekend,
+      weekendTextStyle: ThemeService.body2.copyWith(color: ThemeService.secondary),
       // 공휴일 (평일 공휴일)
-      holidayTextStyle: ThemeService.calendarDayWeekend,
+      holidayTextStyle: ThemeService.body2.copyWith(color: ThemeService.secondary),
       holidayDecoration: const BoxDecoration(shape: BoxShape.circle),
       // 이전/다음 달 날짜
-      outsideTextStyle: ThemeService.withTertiary(ThemeService.calendarDay),
+      outsideTextStyle: ThemeService.body2.copyWith(color: ThemeService.black400),
       // 오늘
       todayDecoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: ThemeService.todayBorder, width: 1.5),
+        border: Border.all(color: ThemeService.primary, width: 1.5),
       ),
-      todayTextStyle: ThemeService.calendarDay.copyWith(
+      todayTextStyle: ThemeService.body2.copyWith(
         color: ThemeService.primary,
         fontWeight: FontWeight.w600,
       ),
       // 선택된 날짜
       selectedDecoration: const BoxDecoration(
-        color: ThemeService.selectedDayBg,
+        color: ThemeService.primary,
         shape: BoxShape.circle,
       ),
-      selectedTextStyle: ThemeService.calendarDaySelected,
+      selectedTextStyle: ThemeService.body2.copyWith(color: ThemeService.white),
       // 이벤트 마커 비활성화 (추후 사용)
       markerDecoration: const BoxDecoration(
         color: ThemeService.primary,
@@ -161,7 +162,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       ),
       markersMaxCount: 0,
       tableBorder: const TableBorder(
-        horizontalInside: BorderSide(color: ThemeService.divider),
+        horizontalInside: BorderSide(color: ThemeService.black200),
       ),
     );
   }

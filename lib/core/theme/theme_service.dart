@@ -3,143 +3,85 @@ import 'package:flutter/material.dart';
 class ThemeService {
   ThemeService._();
 
-  // ─── Colors ───────────────────────────────────────────────────────────────
+  // ─── 유채색 ───────────────────────────────────────────────────────────────
 
-  // Primary
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryLight = Color(0xFFDBEAFE);
-  static const Color primaryDark = Color(0xFF1E40AF);
+  static const Color primary = Color(0xFF74B9FF);    // 스카이블루 (포커스, 선택)
+  static const Color secondary = Color(0xFFFF6B47);  // 살몬 (강조, 공휴일)
+  static const Color tertiary = Color(0xFFFFC547);   // 크림 (휴가)
 
-  // Secondary
-  static const Color secondary = Color(0xFF10B981);
-  static const Color secondaryLight = Color(0xFFD1FAE5);
-  static const Color secondaryDark = Color(0xFF059669);
+  // ─── 무채색 ───────────────────────────────────────────────────────────────
 
-  // Neutral
-  static const Color background = Color(0xFFFAFAFA);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF3F4F6);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black100 = Color(0xFFF7F7F7);
+  static const Color black200 = Color(0xFFEEEEEE);
+  static const Color black300 = Color(0xFFE0E0E0);
+  static const Color black400 = Color(0xFFBDBDBD);
+  static const Color black500 = Color(0xFF9E9E9E);
+  static const Color black600 = Color(0xFF757575);
+  static const Color black700 = Color(0xFF616161);
+  static const Color black800 = Color(0xFF424242);
+  static const Color black900 = Color(0xFF212121);
 
-  static const Color textPrimary = Color(0xFF1F2937);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textTertiary = Color(0xFF9CA3AF);
+  // ─── 텍스트 스타일 (Pretendard) ──────────────────────────────────────────
 
-  // Status
-  static const Color success = Color(0xFF10B981);
-  static const Color error = Color(0xFFEF4444);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color info = Color(0xFF3B82F6);
-
-  // Borders & Dividers
-  static const Color border = Color(0xFFE5E7EB);
-  static const Color divider = Color(0xFFF3F4F6);
-
-  // Calendar specific
-  static const Color weekendText = Color(0xFFEF4444);
-  static const Color holidayBg = Color(0xFFFEE2E2);
-  static const Color selectedDayBg = Color(0xFF2563EB);
-  static const Color selectedDayText = Color(0xFFFFFFFF);
-  static const Color todayBorder = Color(0xFF2563EB);
-
-  // Work hours indicator
-  static const Color workComplete = Color(0xFF10B981);
-  static const Color workIncomplete = Color(0xFFFCA5A5);
-  static const Color workPartial = Color(0xFFFCD34D);
-
-  // ─── Text Styles ──────────────────────────────────────────────────────────
-
-  static const TextStyle title1 = TextStyle(
+  static const TextStyle heading1 = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 32,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     height: 1.2,
-    color: textPrimary,
+    color: black900,
   );
 
-  static const TextStyle title2 = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.w700,
-    height: 1.3,
-    color: textPrimary,
-  );
-
-  static const TextStyle title3 = TextStyle(
+  static const TextStyle heading2 = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 24,
     fontWeight: FontWeight.w600,
-    height: 1.4,
-    color: textPrimary,
+    height: 1.3,
+    color: black900,
   );
 
-  static const TextStyle subtitle1 = TextStyle(
+  static const TextStyle heading3 = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.4,
-    color: textPrimary,
-  );
-
-  static const TextStyle subtitle2 = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w500,
-    height: 1.5,
-    color: textPrimary,
-  );
-
-  static const TextStyle subtitle3 = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w500,
-    height: 1.5,
-    color: textPrimary,
+    color: black900,
   );
 
   static const TextStyle body1 = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
-    color: textPrimary,
+    color: black900,
   );
 
   static const TextStyle body2 = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.5,
-    color: textPrimary,
+    color: black900,
   );
 
-  static const TextStyle body3 = TextStyle(
+  static const TextStyle caption = TextStyle(
+    fontFamily: 'Pretendard',
     fontSize: 12,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w300,
     height: 1.5,
-    color: textPrimary,
+    color: black700,
   );
 
-  // Calendar specific
-  static const TextStyle calendarDay = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    height: 1.4,
-    color: textPrimary,
-  );
-
-  static const TextStyle calendarDayWeekend = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    height: 1.4,
-    color: weekendText,
-  );
-
-  static const TextStyle calendarDaySelected = TextStyle(
-    fontSize: 14,
+  // 달력 셀 근무시간 표시용 (예: 9h 30m)
+  static const TextStyle timeDisplay = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 10,
     fontWeight: FontWeight.w600,
     height: 1.4,
-    color: selectedDayText,
+    color: black700,
   );
 
-  // ─── Text Style Helpers ───────────────────────────────────────────────────
-
-  static TextStyle withSecondary(TextStyle base) =>
-      base.copyWith(color: textSecondary);
-
-  static TextStyle withTertiary(TextStyle base) =>
-      base.copyWith(color: textTertiary);
+  // ─── 헬퍼 ────────────────────────────────────────────────────────────────
 
   static TextStyle withColor(TextStyle base, Color color) =>
       base.copyWith(color: color);
