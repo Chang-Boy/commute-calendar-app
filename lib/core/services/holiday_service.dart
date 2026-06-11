@@ -1,7 +1,7 @@
 import 'package:world_holidays/world_holidays.dart';
 
-class HolidayUtils {
-  HolidayUtils._();
+class HolidayService {
+  HolidayService._();
 
   static final _worldHolidays = WorldHolidays();
   static final _cache = <int, Map<DateTime, String>>{};
@@ -26,4 +26,3 @@ class HolidayUtils {
   static DateTime _normalize(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 }
-

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:commute_calendar/shared/styles/theme_service.dart';
-import 'package:commute_calendar/shared/utils/holiday_utils.dart';
+import 'package:commute_calendar/core/theme/theme_service.dart';
+import 'package:commute_calendar/core/services/holiday_service.dart';
 
 class CalendarWidget extends StatefulWidget {
   const CalendarWidget({super.key});
@@ -22,7 +22,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   }
 
   Future<void> _loadHolidays(int year) async {
-    final holidays = await HolidayUtils.getKoreanHolidays(year);
+    final holidays = await HolidayService.getKoreanHolidays(year);
     if (mounted) {
       setState(() => _holidays = holidays);
     }
@@ -50,7 +50,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       calendarFormat: CalendarFormat.month,
       availableCalendarFormats: const {CalendarFormat.month: '월'},
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-      holidayPredicate: (day) => HolidayUtils.isHoliday(day, _holidays),
+      holidayPredicate: (day) => HolidayService.isHoliday(day, _holidays),
       onDaySelected: _onDaySelected,
       onPageChanged: _onPageChanged,
       headerStyle: _buildHeaderStyle(),
@@ -63,7 +63,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   CalendarBuilders _buildCalendarBuilders() {
     return CalendarBuilders(
       holidayBuilder: (context, day, focusedDay) {
-        final name = HolidayUtils.getHolidayName(day, _holidays);
+        final name = HolidayService.getHolidayName(day, _holidays);
         return _buildHolidayDayCell(day, name);
       },
     );

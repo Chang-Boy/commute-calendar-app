@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 final getIt = GetIt.instance;
 
-void setupDI() {
+void setupServiceLocator() {
   // supabase
   getIt.registerSingleton<SupabaseClient>(supabaseService);
 }

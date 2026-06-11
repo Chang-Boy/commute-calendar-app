@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:commute_calendar/feature/calendar/presentation/widgets/calendar_widget.dart';
-import 'package:commute_calendar/shared/styles/theme_service.dart';
+import 'package:commute_calendar/core/theme/theme_service.dart';
 
 class CalendarPage extends StatelessWidget {
   const CalendarPage({super.key});

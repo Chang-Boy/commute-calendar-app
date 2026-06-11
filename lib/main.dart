@@ -1,10 +1,10 @@
-import 'package:commute_calendar/core/di/setup_di.dart';
+import 'package:commute_calendar/core/di/service_locator.dart';
+import 'package:commute_calendar/core/theme/app_theme.dart';
 import 'package:commute_calendar/feature/calendar/presentation/pages/calendar_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'shared/styles/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +19,7 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  setupDI();
+  setupServiceLocator();
 
   runApp(const MyApp());
 }
