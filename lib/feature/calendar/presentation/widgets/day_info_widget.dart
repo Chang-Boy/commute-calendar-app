@@ -160,7 +160,7 @@ class _StatusMessage extends StatelessWidget {
 
     return Column(
       children: [
-        Text(message, style: ThemeService.heading3.copyWith(color: color)),
+        Text(message, style: ThemeService.headline.copyWith(color: color)),
         if (_shouldShowMemo && record?.memo != null && record!.memo!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),

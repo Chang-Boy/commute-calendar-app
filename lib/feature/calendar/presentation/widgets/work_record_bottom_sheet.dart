@@ -1,5 +1,6 @@
 import 'package:commute_calendar/core/theme/theme_service.dart';
 import 'package:commute_calendar/feature/calendar/domain/entities/work_record_entity.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -39,8 +40,14 @@ class WorkRecordBottomSheet extends StatefulWidget {
 }
 
 class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
-  late TimeOfDay _startTime;
-  late TimeOfDay _endTime;
+  late int _startHour;
+  late int _startMinute;
+  late int _endHour;
+  late int _endMinute;
+  late FixedExtentScrollController _startHourCtrl;
+  late FixedExtentScrollController _startMinCtrl;
+  late FixedExtentScrollController _endHourCtrl;
+  late FixedExtentScrollController _endMinCtrl;
   late TextEditingController _memoController;
 
   @override
@@ -50,8 +57,19 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
     final existing = widget.existingRecord?.type == WorkType.work
         ? widget.existingRecord
         : null;
-    _startTime = existing?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
-    _endTime = existing?.endTime ?? const TimeOfDay(hour: 18, minute: 0);
+    final startTime = existing?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
+    final endTime = existing?.endTime ?? TimeOfDay.now();
+
+    _startHour = startTime.hour;
+    _startMinute = startTime.minute;
+    _endHour = endTime.hour;
+    _endMinute = endTime.minute;
+
+    _startHourCtrl = FixedExtentScrollController(initialItem: _startHour);
+    _startMinCtrl = FixedExtentScrollController(initialItem: _startMinute);
+    _endHourCtrl = FixedExtentScrollController(initialItem: _endHour);
+    _endMinCtrl = FixedExtentScrollController(initialItem: _endMinute);
+
     final existingMemo = widget.existingRecord?.type == widget.workType
         ? widget.existingRecord?.memo
         : null;
@@ -60,6 +78,10 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
 
   @override
   void dispose() {
+    _startHourCtrl.dispose();
+    _startMinCtrl.dispose();
+    _endHourCtrl.dispose();
+    _endMinCtrl.dispose();
     _memoController.dispose();
     super.dispose();
   }
@@ -77,8 +99,8 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
   };
 
   Duration get _previewDuration {
-    final startMin = _startTime.hour * 60 + _startTime.minute;
-    final endMin = _endTime.hour * 60 + _endTime.minute;
+    final startMin = _startHour * 60 + _startMinute;
+    final endMin = _endHour * 60 + _endMinute;
     final diff = endMin - startMin;
     return diff > 0 ? Duration(minutes: diff) : Duration.zero;
   }
@@ -99,8 +121,12 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
       id: id,
       date: widget.selectedDate,
       type: widget.workType,
-      startTime: widget.workType == WorkType.work ? _startTime : null,
-      endTime: widget.workType == WorkType.work ? _endTime : null,
+      startTime: widget.workType == WorkType.work
+          ? TimeOfDay(hour: _startHour, minute: _startMinute)
+          : null,
+      endTime: widget.workType == WorkType.work
+          ? TimeOfDay(hour: _endHour, minute: _endMinute)
+          : null,
       memo: memo.isEmpty ? null : memo,
     );
     Navigator.pop(context, record);
@@ -130,7 +156,7 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
           _buildDateLabel(),
           const SizedBox(height: 24),
           if (widget.workType == WorkType.work) ...[
-            _buildTimePickers(context),
+            _buildTimePickers(),
             const SizedBox(height: 16),
             _buildDurationPreview(),
             const SizedBox(height: 24),
@@ -166,7 +192,7 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
       children: [
         PhosphorIcon(_typeIcon, color: _accentColor, size: 22),
         const SizedBox(width: 8),
-        Text(titles[widget.workType]!, style: ThemeService.heading3),
+        Text(titles[widget.workType]!, style: ThemeService.subtitle),
       ],
     );
   }
@@ -179,34 +205,120 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
     );
   }
 
-  Widget _buildTimePickers(BuildContext context) {
+  Widget _buildTimePickers() {
     return Row(
       children: [
         Expanded(
-          child: _TimePickerField(
+          child: _buildSinglePicker(
             label: '출근',
-            time: _startTime,
-            onTap: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: _startTime,
-              );
-              if (picked != null) setState(() => _startTime = picked);
-            },
+            hourCtrl: _startHourCtrl,
+            minCtrl: _startMinCtrl,
+            onHourChanged: (v) => setState(() => _startHour = v),
+            onMinChanged: (v) => setState(() => _startMinute = v),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _TimePickerField(
+          child: _buildSinglePicker(
             label: '퇴근',
-            time: _endTime,
-            onTap: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: _endTime,
-              );
-              if (picked != null) setState(() => _endTime = picked);
-            },
+            hourCtrl: _endHourCtrl,
+            minCtrl: _endMinCtrl,
+            onHourChanged: (v) => setState(() => _endHour = v),
+            onMinChanged: (v) => setState(() => _endMinute = v),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSinglePicker({
+    required String label,
+    required FixedExtentScrollController hourCtrl,
+    required FixedExtentScrollController minCtrl,
+    required void Function(int) onHourChanged,
+    required void Function(int) onMinChanged,
+  }) {
+    const pickerHeight = 130.0;
+    const itemExtent = 38.0;
+    const bg = ThemeService.black100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: ThemeService.caption),
+        const SizedBox(height: 6),
+        Container(
+          height: pickerHeight,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Stack(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: CupertinoPicker(
+                      scrollController: hourCtrl,
+                      itemExtent: itemExtent,
+                      looping: true,
+                      backgroundColor: Colors.transparent,
+                      selectionOverlay: const SizedBox.shrink(),
+                      onSelectedItemChanged: onHourChanged,
+                      children: List.generate(
+                        24,
+                        (i) => Center(
+                          child: Text(
+                            i.toString().padLeft(2, '0'),
+                            style: ThemeService.subtitle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    ':',
+                    style: ThemeService.body1.copyWith(
+                      color: ThemeService.black500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Expanded(
+                    child: CupertinoPicker(
+                      scrollController: minCtrl,
+                      itemExtent: itemExtent,
+                      looping: true,
+                      backgroundColor: Colors.transparent,
+                      selectionOverlay: const SizedBox.shrink(),
+                      onSelectedItemChanged: onMinChanged,
+                      children: List.generate(
+                        60,
+                        (i) => Center(
+                          child: Text(
+                            i.toString().padLeft(2, '0'),
+                            style: ThemeService.subtitle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // 위아래 그라디언트로 비선택 항목 페이드아웃
+              IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [bg, Color(0x00F7F7F7), Color(0x00F7F7F7), bg],
+                      stops: [0.0, 0.38, 0.62, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -229,7 +341,7 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
           ),
           Text(
             _formatDuration(_previewDuration),
-            style: ThemeService.heading3.copyWith(color: _accentColor),
+            style: ThemeService.subtitle.copyWith(color: _accentColor),
           ),
         ],
       ),
@@ -246,7 +358,8 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
         hintText: _memoHint,
         hintStyle: ThemeService.body2.copyWith(color: ThemeService.black400),
         counterStyle: ThemeService.caption,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         filled: true,
         fillColor: ThemeService.black100,
         border: OutlineInputBorder(
@@ -280,47 +393,6 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
               fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TimePickerField extends StatelessWidget {
-  const _TimePickerField({
-    required this.label,
-    required this.time,
-    required this.onTap,
-  });
-
-  final String label;
-  final TimeOfDay time;
-  final VoidCallback onTap;
-
-  String _fmt(TimeOfDay t) {
-    final h = t.hour.toString().padLeft(2, '0');
-    final m = t.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: ThemeService.black100,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: ThemeService.black200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: ThemeService.caption),
-            const SizedBox(height: 4),
-            Text(_fmt(time), style: ThemeService.heading3),
-          ],
         ),
       ),
     );

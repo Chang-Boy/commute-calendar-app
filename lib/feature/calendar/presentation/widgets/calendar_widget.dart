@@ -49,11 +49,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   DateTime _normalize(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
-  WorkRecord? _recordFor(DateTime day) =>
-      widget.records[_normalize(day)];
+  WorkRecord? _recordFor(DateTime day) => widget.records[_normalize(day)];
 
-  bool _isApiHoliday(DateTime day) =>
-      HolidayService.isHoliday(day, _holidays);
+  bool _isApiHoliday(DateTime day) => HolidayService.isHoliday(day, _holidays);
 
   bool _isWeekendOrHoliday(DateTime day) {
     final record = _recordFor(day);
@@ -76,11 +74,9 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       headerVisible: false,
       daysOfWeekHeight: 36,
       rowHeight: 68.0,
-      selectedDayPredicate: (day) =>
-          isSameDay(widget.selectedDate, day),
+      selectedDayPredicate: (day) => isSameDay(widget.selectedDate, day),
       holidayPredicate: (day) => _isApiHoliday(day),
-      onDaySelected: (selected, focused) =>
-          widget.onDateSelected(selected),
+      onDaySelected: (selected, focused) => widget.onDateSelected(selected),
       onPageChanged: widget.onMonthChanged,
       daysOfWeekStyle: _buildDaysOfWeekStyle(),
       calendarStyle: _buildCalendarStyle(),
@@ -121,6 +117,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         children: [
           _buildDateCircle(
             day,
+            record: record,
             isToday: isToday,
             isSelected: isSelected,
             isWeekendOrHol: isWeekendOrHol,
@@ -135,6 +132,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   Widget _buildDateCircle(
     DateTime day, {
+    required WorkRecord? record,
     required bool isToday,
     required bool isSelected,
     required bool isWeekendOrHol,
@@ -149,12 +147,20 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       textColor = ThemeService.white;
       fontWeight = FontWeight.w600;
     } else if (isSelected) {
-      bgColor = ThemeService.black900;
+      bgColor = ThemeService.black500;
       textColor = ThemeService.white;
       fontWeight = FontWeight.w600;
     } else if (isOutside) {
       textColor = ThemeService.black400;
     } else if (isWeekendOrHol) {
+      // 공휴일·주말은 근무 기록 여부와 무관하게 secondary 우선
+      // (하단 duration 텍스트로 근무 여부를 별도 표시)
+      textColor = ThemeService.secondary;
+    } else if (record?.type == WorkType.work) {
+      textColor = ThemeService.primary;
+    } else if (record?.type == WorkType.vacation) {
+      textColor = ThemeService.vacation;
+    } else if (record?.type == WorkType.holiday) {
       textColor = ThemeService.secondary;
     } else {
       textColor = ThemeService.black900;
@@ -163,10 +169,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return Container(
       width: 28,
       height: 28,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: bgColor,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: bgColor),
       child: Center(
         child: Text(
           '${day.day}',
@@ -183,42 +186,26 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     if (record != null) {
       return switch (record.type) {
         WorkType.work => Text(
-            _formatDuration(record.workedDuration),
-            style: ThemeService.timeDisplay.copyWith(
-              color: ThemeService.primary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        WorkType.vacation => Text(
-            '연차',
-            style: ThemeService.timeDisplay.copyWith(
-              color: ThemeService.vacation,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        WorkType.holiday => Text(
-            '휴일',
-            style: ThemeService.timeDisplay.copyWith(
-              color: ThemeService.secondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          _formatDuration(record.workedDuration),
+          style: ThemeService.timeDisplay.copyWith(color: ThemeService.primary),
+          textAlign: TextAlign.center,
+        ),
+        WorkType.vacation => _buildDot(ThemeService.vacation),
+        WorkType.holiday => _buildDot(ThemeService.secondary),
       };
     }
 
-    if (holidayName != null) {
-      return Text(
-        holidayName,
-        style: ThemeService.timeDisplay.copyWith(
-          color: ThemeService.secondary,
-        ),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-        textAlign: TextAlign.center,
-      );
-    }
+    if (holidayName != null) return _buildDot(ThemeService.secondary);
 
     return const SizedBox.shrink();
+  }
+
+  Widget _buildDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    );
   }
 
   String _formatDuration(Duration d) {
@@ -241,13 +228,16 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return CalendarStyle(
       outsideDaysVisible: false,
       defaultTextStyle: ThemeService.body2,
-      weekendTextStyle:
-          ThemeService.body2.copyWith(color: ThemeService.secondary),
-      holidayTextStyle:
-          ThemeService.body2.copyWith(color: ThemeService.secondary),
+      weekendTextStyle: ThemeService.body2.copyWith(
+        color: ThemeService.secondary,
+      ),
+      holidayTextStyle: ThemeService.body2.copyWith(
+        color: ThemeService.secondary,
+      ),
       holidayDecoration: const BoxDecoration(),
-      outsideTextStyle:
-          ThemeService.body2.copyWith(color: ThemeService.black400),
+      outsideTextStyle: ThemeService.body2.copyWith(
+        color: ThemeService.black400,
+      ),
       todayDecoration: const BoxDecoration(),
       todayTextStyle: ThemeService.body2,
       selectedDecoration: const BoxDecoration(),

@@ -44,6 +44,7 @@ class _CalendarView extends StatelessWidget {
                       children: [
                         const MonthlySummaryWidget(),
                         const _SectionDivider(),
+                        const _CalendarLegend(),
                         BlocBuilder<CalendarBloc, CalendarState>(
                           builder: (context, state) {
                             if (state is! CalendarLoaded) {
@@ -85,6 +86,53 @@ class _CalendarView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CalendarLegend extends StatelessWidget {
+  const _CalendarLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, top: 10, bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _LegendItem(color: ThemeService.primary, label: '근무일'),
+          const SizedBox(width: 20),
+          _LegendItem(color: ThemeService.secondary, label: '휴일'),
+          const SizedBox(width: 20),
+          _LegendItem(color: ThemeService.vacation, label: '휴가'),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: ThemeService.caption.copyWith(color: ThemeService.black600),
+        ),
+      ],
     );
   }
 }
@@ -133,7 +181,7 @@ class _MonthHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(label, style: ThemeService.heading3),
+              Text(label, style: ThemeService.subtitle),
               GestureDetector(
                 onTap: () {
                   final next = DateTime(month.year, month.month + 1);

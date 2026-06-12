@@ -74,7 +74,7 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           _format(duration),
-          style: ThemeService.heading3.copyWith(color: color),
+          style: ThemeService.subtitle.copyWith(color: color),
         ),
       ],
     );

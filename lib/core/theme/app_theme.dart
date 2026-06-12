@@ -25,7 +25,7 @@ class AppTheme {
         backgroundColor: ThemeService.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: ThemeService.heading3,
+        titleTextStyle: ThemeService.subtitle,
         iconTheme: const IconThemeData(color: ThemeService.black900),
       ),
       dividerTheme: const DividerThemeData(

@@ -24,34 +24,30 @@ class ThemeService {
   static const Color black900 = Color(0xFF212121);
 
   // ─── 텍스트 스타일 (Pretendard) ──────────────────────────────────────────
+  // 26 → 22 → 18 → 16 → 14 → 12 (2단위 스케일)
 
-  static const TextStyle heading1 = TextStyle(
+  // ── 헤드라인: 핵심 정보, 가장 강조되는 메시지 ──────────────────────────
+  static const TextStyle headline = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 32,
-    fontWeight: FontWeight.w600,
-    height: 1.2,
-    color: black900,
-  );
-
-  static const TextStyle heading2 = TextStyle(
-    fontFamily: 'Pretendard',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: FontWeight.w600,
     height: 1.3,
     color: black900,
   );
 
-  static const TextStyle heading3 = TextStyle(
+  // ── 서브타이틀: 섹션 제목, 숫자 강조 ──────────────────────────────────
+  static const TextStyle subtitle = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.w600,
     height: 1.4,
     color: black900,
   );
 
+  // ── 본문 ─────────────────────────────────────────────────────────────
   static const TextStyle body1 = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w400,
     height: 1.5,
     color: black900,
@@ -59,7 +55,7 @@ class ThemeService {
 
   static const TextStyle body2 = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
     color: black900,
@@ -67,7 +63,7 @@ class ThemeService {
 
   static const TextStyle caption = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.w300,
     height: 1.5,
     color: black700,
@@ -76,7 +72,7 @@ class ThemeService {
   // 달력 셀 근무시간 표시용 (예: 9h 30m)
   static const TextStyle timeDisplay = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     height: 1.4,
     color: black700,
