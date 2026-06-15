@@ -42,8 +42,6 @@ class _CalendarView extends StatelessWidget {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const MonthlySummaryWidget(),
-                        const _SectionDivider(),
                         const _CalendarLegend(),
                         BlocBuilder<CalendarBloc, CalendarState>(
                           builder: (context, state) {
@@ -71,6 +69,8 @@ class _CalendarView extends StatelessWidget {
                             );
                           },
                         ),
+                        const _SectionDivider(),
+                        const MonthlySummaryWidget(),
                         const _SectionDivider(),
                         const DayInfoWidget(),
                         const SizedBox(height: 96),
