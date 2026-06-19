@@ -48,10 +48,10 @@ app.*.map.json
 .env
 
 # Project documentation and planning
-docs/
+#docs/
 
 # Claude Code related
-.claude/
+#.claude/
 
 # Temporary files
 *.tmp
