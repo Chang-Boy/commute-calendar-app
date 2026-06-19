@@ -1,7 +1,9 @@
+import 'package:commute_calendar/core/services/toast_service.dart';
 import 'package:commute_calendar/core/theme/theme_service.dart';
 import 'package:commute_calendar/feature/calendar/domain/entities/work_record_entity.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:commute_calendar/feature/calendar/presentation/widgets/work_record_commute_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -40,6 +42,12 @@ class WorkRecordBottomSheet extends StatefulWidget {
 }
 
 class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
+  // 근무시간 (필수, work 타입에서만 사용)
+  late int _durationHours;
+  late int _durationMinutes;
+
+  // 출퇴근 시간 (선택, 인라인 펼침)
+  bool _isTimeExpanded = false;
   late int _startHour;
   late int _startMinute;
   late int _endHour;
@@ -48,27 +56,44 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
   late FixedExtentScrollController _startMinCtrl;
   late FixedExtentScrollController _endHourCtrl;
   late FixedExtentScrollController _endMinCtrl;
+
+  late TextEditingController _hoursController;
+  late TextEditingController _minutesController;
   late TextEditingController _memoController;
 
   @override
   void initState() {
     super.initState();
-    // 기존 기록이 work 타입이면 해당 시간으로 초기화, 아니면 기본값
     final existing = widget.existingRecord?.type == WorkType.work
         ? widget.existingRecord
         : null;
-    final startTime = existing?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
-    final endTime = existing?.endTime ?? TimeOfDay.now();
 
+    // 근무시간 복원
+    final existingMinutes = existing?.workMinutes ?? 0;
+    _durationHours = existingMinutes ~/ 60;
+    _durationMinutes = existingMinutes % 60;
+
+    // 출퇴근 시간 복원 (기존 기록에 출퇴근 있으면 펼쳐서 표시)
+    final startTime =
+        existing?.startTime ?? const TimeOfDay(hour: 8, minute: 30);
+    final endTime = existing?.endTime ?? const TimeOfDay(hour: 17, minute: 30);
     _startHour = startTime.hour;
     _startMinute = startTime.minute;
     _endHour = endTime.hour;
     _endMinute = endTime.minute;
+    _isTimeExpanded = existing?.startTime != null;
 
     _startHourCtrl = FixedExtentScrollController(initialItem: _startHour);
     _startMinCtrl = FixedExtentScrollController(initialItem: _startMinute);
     _endHourCtrl = FixedExtentScrollController(initialItem: _endHour);
     _endMinCtrl = FixedExtentScrollController(initialItem: _endMinute);
+
+    _hoursController = TextEditingController(
+      text: _durationHours > 0 ? _durationHours.toString() : '',
+    );
+    _minutesController = TextEditingController(
+      text: _durationMinutes > 0 ? _durationMinutes.toString() : '',
+    );
 
     final existingMemo = widget.existingRecord?.type == widget.workType
         ? widget.existingRecord?.memo
@@ -82,6 +107,8 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
     _startMinCtrl.dispose();
     _endHourCtrl.dispose();
     _endMinCtrl.dispose();
+    _hoursController.dispose();
+    _minutesController.dispose();
     _memoController.dispose();
     super.dispose();
   }
@@ -98,33 +125,37 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
     WorkType.holiday => PhosphorIcons.calendarX(),
   };
 
-  Duration get _previewDuration {
-    final startMin = _startHour * 60 + _startMinute;
-    final endMin = _endHour * 60 + _endMinute;
-    final diff = endMin - startMin;
-    return diff > 0 ? Duration(minutes: diff) : Duration.zero;
-  }
-
-  String _formatDuration(Duration d) {
-    final h = d.inHours;
-    final m = d.inMinutes.remainder(60);
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
-  }
+  bool get _canSave =>
+      widget.workType != WorkType.work ||
+      (_durationHours > 0 || _durationMinutes > 0);
 
   void _save() {
-    final id = widget.existingRecord?.id ??
+    if (widget.workType == WorkType.work &&
+        _durationHours == 0 &&
+        _durationMinutes == 0) {
+      ToastService.show(
+        context: context,
+        message: '근무시간을 입력해주세요.',
+        isError: true,
+      );
+      return;
+    }
+
+    final id =
+        widget.existingRecord?.id ??
         DateTime.now().millisecondsSinceEpoch.toString();
     final memo = _memoController.text.trim();
+    final workMinutes = _durationHours * 60 + _durationMinutes.clamp(0, 59);
 
     final record = WorkRecordEntity(
       id: id,
       date: widget.selectedDate,
       type: widget.workType,
-      startTime: widget.workType == WorkType.work
+      workMinutes: widget.workType == WorkType.work ? workMinutes : null,
+      startTime: (widget.workType == WorkType.work && _isTimeExpanded)
           ? TimeOfDay(hour: _startHour, minute: _startMinute)
           : null,
-      endTime: widget.workType == WorkType.work
+      endTime: (widget.workType == WorkType.work && _isTimeExpanded)
           ? TimeOfDay(hour: _endHour, minute: _endMinute)
           : null,
       memo: memo.isEmpty ? null : memo,
@@ -156,10 +187,22 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
           _buildDateLabel(),
           const SizedBox(height: 24),
           if (widget.workType == WorkType.work) ...[
-            _buildTimePickers(),
+            _buildDurationInput(),
+            const SizedBox(height: 12),
+            WorkRecordCommutePicker(
+              isExpanded: _isTimeExpanded,
+              onToggle: () =>
+                  setState(() => _isTimeExpanded = !_isTimeExpanded),
+              startHourCtrl: _startHourCtrl,
+              startMinCtrl: _startMinCtrl,
+              endHourCtrl: _endHourCtrl,
+              endMinCtrl: _endMinCtrl,
+              onStartHourChanged: (v) => setState(() => _startHour = v),
+              onStartMinChanged: (v) => setState(() => _startMinute = v),
+              onEndHourChanged: (v) => setState(() => _endHour = v),
+              onEndMinChanged: (v) => setState(() => _endMinute = v),
+            ),
             const SizedBox(height: 16),
-            _buildDurationPreview(),
-            const SizedBox(height: 24),
           ],
           _buildMemoField(),
           const SizedBox(height: 16),
@@ -205,146 +248,69 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
     );
   }
 
-  Widget _buildTimePickers() {
+  Widget _buildDurationInput() {
     return Row(
       children: [
         Expanded(
-          child: _buildSinglePicker(
-            label: '출근',
-            hourCtrl: _startHourCtrl,
-            minCtrl: _startMinCtrl,
-            onHourChanged: (v) => setState(() => _startHour = v),
-            onMinChanged: (v) => setState(() => _startMinute = v),
+          child: _buildTimeField(
+            label: '시간',
+            controller: _hoursController,
+            onChanged: (v) =>
+                setState(() => _durationHours = int.tryParse(v) ?? 0),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildSinglePicker(
-            label: '퇴근',
-            hourCtrl: _endHourCtrl,
-            minCtrl: _endMinCtrl,
-            onHourChanged: (v) => setState(() => _endHour = v),
-            onMinChanged: (v) => setState(() => _endMinute = v),
+          child: _buildTimeField(
+            label: '분',
+            controller: _minutesController,
+            onChanged: (v) => setState(
+              () => _durationMinutes = (int.tryParse(v) ?? 0).clamp(0, 59),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSinglePicker({
+  Widget _buildTimeField({
     required String label,
-    required FixedExtentScrollController hourCtrl,
-    required FixedExtentScrollController minCtrl,
-    required void Function(int) onHourChanged,
-    required void Function(int) onMinChanged,
+    required TextEditingController controller,
+    required void Function(String) onChanged,
   }) {
-    const pickerHeight = 130.0;
-    const itemExtent = 38.0;
-    const bg = ThemeService.black100;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: ThemeService.caption),
         const SizedBox(height: 6),
-        Container(
-          height: pickerHeight,
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Stack(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: CupertinoPicker(
-                      scrollController: hourCtrl,
-                      itemExtent: itemExtent,
-                      looping: true,
-                      backgroundColor: Colors.transparent,
-                      selectionOverlay: const SizedBox.shrink(),
-                      onSelectedItemChanged: onHourChanged,
-                      children: List.generate(
-                        24,
-                        (i) => Center(
-                          child: Text(
-                            i.toString().padLeft(2, '0'),
-                            style: ThemeService.subtitle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    ':',
-                    style: ThemeService.body1.copyWith(
-                      color: ThemeService.black500,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Expanded(
-                    child: CupertinoPicker(
-                      scrollController: minCtrl,
-                      itemExtent: itemExtent,
-                      looping: true,
-                      backgroundColor: Colors.transparent,
-                      selectionOverlay: const SizedBox.shrink(),
-                      onSelectedItemChanged: onMinChanged,
-                      children: List.generate(
-                        60,
-                        (i) => Center(
-                          child: Text(
-                            i.toString().padLeft(2, '0'),
-                            style: ThemeService.subtitle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // 위아래 그라디언트로 비선택 항목 페이드아웃
-              IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [bg, Color(0x00F7F7F7), Color(0x00F7F7F7), bg],
-                      stops: [0.0, 0.38, 0.62, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(2),
+          ],
+          style: ThemeService.body1,
+          textAlign: TextAlign.center,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: '0',
+            hintStyle: ThemeService.body1.copyWith(
+              color: ThemeService.black400,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            filled: true,
+            fillColor: ThemeService.black100,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDurationPreview() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: ThemeService.black100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '근무 시간',
-            style: ThemeService.body2.copyWith(color: ThemeService.black600),
-          ),
-          Text(
-            _formatDuration(_previewDuration),
-            style: ThemeService.subtitle.copyWith(color: _accentColor),
-          ),
-        ],
-      ),
     );
   }
 
@@ -358,8 +324,10 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
         hintText: _memoHint,
         hintStyle: ThemeService.body2.copyWith(color: ThemeService.black400),
         counterStyle: ThemeService.caption,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         filled: true,
         fillColor: ThemeService.black100,
         border: OutlineInputBorder(
@@ -377,12 +345,13 @@ class _WorkRecordBottomSheetState extends State<WorkRecordBottomSheet> {
   };
 
   Widget _buildSaveButton() {
+    final isEnabled = _canSave;
     return GestureDetector(
-      onTap: _save,
+      onTap: isEnabled ? _save : null,
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: _accentColor,
+          color: isEnabled ? _accentColor : ThemeService.black300,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(

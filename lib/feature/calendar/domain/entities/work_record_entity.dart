@@ -12,6 +12,7 @@ class WorkRecordEntity extends Equatable {
     required this.id,
     required this.date,
     required this.type,
+    this.workMinutes,
     this.startTime,
     this.endTime,
     this.memo,
@@ -20,13 +21,14 @@ class WorkRecordEntity extends Equatable {
   final String id;
   final DateTime date;
   final WorkType type;
+  final int? workMinutes; // WorkType.work 에서만 사용. 총 근무시간(분 단위)
   final TimeOfDay? startTime; // WorkType.work 에서만 사용
   final TimeOfDay? endTime; // WorkType.work 에서만 사용
   final String? memo; // 선택 입력 메모
 
   Duration get workedDuration {
     return switch (type) {
-      WorkType.work => _calcWorkDuration(),
+      WorkType.work => Duration(minutes: workMinutes ?? 0),
       WorkType.vacation => Duration.zero,
       WorkType.holiday => Duration.zero,
     };
@@ -34,18 +36,11 @@ class WorkRecordEntity extends Equatable {
 
   bool get hasMemo => memo != null && memo!.isNotEmpty;
 
-  Duration _calcWorkDuration() {
-    if (startTime == null || endTime == null) return Duration.zero;
-    final startMinutes = startTime!.hour * 60 + startTime!.minute;
-    final endMinutes = endTime!.hour * 60 + endTime!.minute;
-    final diff = endMinutes - startMinutes;
-    return diff > 0 ? Duration(minutes: diff) : Duration.zero;
-  }
-
   WorkRecordEntity copyWith({
     String? id,
     DateTime? date,
     WorkType? type,
+    int? workMinutes,
     TimeOfDay? startTime,
     TimeOfDay? endTime,
     String? memo,
@@ -54,6 +49,7 @@ class WorkRecordEntity extends Equatable {
       id: id ?? this.id,
       date: date ?? this.date,
       type: type ?? this.type,
+      workMinutes: workMinutes ?? this.workMinutes,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       memo: memo ?? this.memo,
@@ -61,5 +57,5 @@ class WorkRecordEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, date, type, startTime, endTime, memo];
+  List<Object?> get props => [id, date, type, workMinutes, startTime, endTime, memo];
 }

@@ -20,6 +20,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '1',
         date: DateTime(y, m, 2),
         type: WorkType.work,
+        workMinutes: 540, // 9h
         startTime: const TimeOfDay(hour: 9, minute: 0),
         endTime: const TimeOfDay(hour: 18, minute: 0),
       ),
@@ -27,6 +28,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '2',
         date: DateTime(y, m, 3),
         type: WorkType.work,
+        workMinutes: 540, // 9h
         startTime: const TimeOfDay(hour: 8, minute: 30),
         endTime: const TimeOfDay(hour: 17, minute: 30),
       ),
@@ -34,6 +36,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '3',
         date: DateTime(y, m, 4),
         type: WorkType.work,
+        workMinutes: 570, // 9h 30m
         startTime: const TimeOfDay(hour: 9, minute: 0),
         endTime: const TimeOfDay(hour: 18, minute: 30),
       ),
@@ -41,6 +44,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '4',
         date: DateTime(y, m, 9),
         type: WorkType.work,
+        workMinutes: 540, // 9h
         startTime: const TimeOfDay(hour: 9, minute: 0),
         endTime: const TimeOfDay(hour: 18, minute: 0),
       ),
@@ -48,6 +52,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '5',
         date: DateTime(y, m, 10),
         type: WorkType.work,
+        workMinutes: 540, // 9h
         startTime: const TimeOfDay(hour: 10, minute: 0),
         endTime: const TimeOfDay(hour: 19, minute: 0),
         memo: '오전 팀 미팅',
@@ -56,6 +61,7 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '6',
         date: DateTime(y, m, 11),
         type: WorkType.work,
+        workMinutes: 480, // 8h
         startTime: const TimeOfDay(hour: 9, minute: 0),
         endTime: const TimeOfDay(hour: 17, minute: 0),
       ),
@@ -63,8 +69,17 @@ class MockCalendarRepository implements ICalendarRepository {
         id: '7',
         date: DateTime(y, m, 12),
         type: WorkType.work,
+        workMinutes: 540, // 9h
         startTime: const TimeOfDay(hour: 8, minute: 0),
         endTime: const TimeOfDay(hour: 17, minute: 0),
+      ),
+      // 출퇴근 시간 없이 workMinutes만 있는 케이스 (nullable 검증용)
+      WorkRecordEntity(
+        id: '11',
+        date: DateTime(y, m, 13),
+        type: WorkType.work,
+        workMinutes: 510, // 8h 30m
+        memo: '재택근무',
       ),
       // 연차
       WorkRecordEntity(

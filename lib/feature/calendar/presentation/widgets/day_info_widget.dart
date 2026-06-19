@@ -263,24 +263,9 @@ class _RecordTile extends StatelessWidget {
   }
 
   Widget _buildWorkContent() {
-    final start = record.startTime;
-    final end = record.endTime;
-
-    if (start == null || end == null) {
-      return Text(
-        '시간 정보 없음',
-        style: ThemeService.body2.copyWith(color: ThemeService.black600),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${_formatTime(start)}  ~  ${_formatTime(end)}',
-          style: ThemeService.body2,
-        ),
-        const SizedBox(height: 4),
         Text(
           _formatDuration(record.workedDuration),
           style: ThemeService.body1.copyWith(
@@ -288,6 +273,13 @@ class _RecordTile extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        if (record.startTime != null && record.endTime != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            '${_formatTime(record.startTime!)}  ~  ${_formatTime(record.endTime!)}',
+            style: ThemeService.body2.copyWith(color: ThemeService.black600),
+          ),
+        ],
       ],
     );
   }
